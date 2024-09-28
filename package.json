@@ -6,7 +6,7 @@
     "scripts": {
         "start": "node server.js",
         "dev": "nodemon -r dotenv/config server.js",
-        "test": "jest"
+        "test": "jest --run-in-band --silent --coverage --detectOpenHandles"
     },
     "repository": {},
     "keywords": [
