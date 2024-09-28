@@ -1,0 +1,372 @@
+openapi: '3.0.3'
+info:
+  title: PEEN Template API
+  version: '1.0.0'
+servers:
+  - url: http://localhost:8000
+paths:
+  /api/tokens:
+    post:
+      summary: LOG IN / CREATE TOKENS
+      description: PUBLIC - Login to the api using email and password. If authenticated, returns a JSON object containing the access token and refresh token.
+      tags:
+        - all
+        - auth
+        - tokens
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:    
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '201':
+          description: User logged in, tokens created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/jsonMessage"
+              examples:
+                MissingEmail:
+                  value:
+                    message: "Email is required"
+                MissingPassword:
+                  value:
+                    message: "Password is required"
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/jsonMessage"
+              example:
+                message: "Incorrect email or password"
+    patch:
+      summary: REFRESH ACCESS TOKEN
+      description: PUBLIC - Use refresh token to get a new access token
+      tags:
+        - all
+        - auth
+        - tokens
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Access token refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/jsonMessage"
+              example:
+                message: "Refresh token is required"
+        '401':
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/jsonMessage"
+              example:
+                message: "Invalid refresh token"
+    delete:
+      summary: LOG OUT / DELETE REFRESH TOKEN
+      description: PUBLIC - Log out user, delete refresh token.
+      tags:
+        - all
+        - auth
+        - tokens
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Refresh token deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/jsonMessage"
+              example:
+                message: "Refresh token deleted successfully"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/jsonMessage"
+              example:
+                message: "Refresh token is required"
+        '401':
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/jsonMessage"
+              example:
+                message: "Invalid refresh token"
+  /api/users:
+    get:
+      security:
+        - bearerAuth: []
+      summary: SEARCH USERS
+      description: ADMIN ONLY - Returns a JSON array of user objects, according to the query parameters.
+      tags:
+        - all
+        - users
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          example: 20
+          description: Max number of users to retrieve. Used in conjunction with 'offset' to implement pagination.
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          example: 0
+          description: User index offset. Used in conjunction with 'limit' to implement pagination.
+        - in: query
+          name: before
+          schema:
+            type: string
+            format: date-time
+          examples:
+            date:
+              value: 2024-01-01
+            datetime:
+              value: 2024-01-01T00:00:00.00Z
+          description: Get users created before the specified date/time
+        - in: query
+          name: after
+          schema:
+            type: string
+            format: date-time
+          examples:
+            date:
+              value: 1990-01-01
+            datetime:
+              value: 1990-01-01T00:00:00.00Z
+          description: Get users created after the specified date/time
+        - in: query
+          name: name
+          schema:
+            type: string
+          example: John Doe
+          description: Search users by name
+        - in: query
+          name: email
+          schema:
+            type: string
+            format: email
+          example: user@email.com
+          description: Search users by email
+        - in: query
+          name: role
+          schema:
+            type: string
+          example: USER
+          description: Search users by role
+        - in: query
+          name: verified
+          schema:
+            type: boolean
+          description: Search users by verification status
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        '403':
+          description: Forbidden
+    post:
+      summary: SIGN UP / CREATE USER
+      description: PUBLIC - Create a new user
+      tags:
+        - all
+        - auth
+        - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/jsonMessage"
+              examples:
+                MissingName:
+                  value:
+                    message: "Name is required"
+                MissingEmail:
+                  value:
+                    message: "Email is required"
+                MissingPassword:
+                  value:
+                    message: "Password is required"
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/jsonMessage"
+              example:
+                message: "A user with that email already exists"
+  /api/users/{id}:
+    get:
+      security:
+        - bearerAuth: []
+      summary: GET USER
+      tags:
+        - all
+        - users
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: UUID
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        '403':
+          description: Forbidden
+    patch:
+      security:
+        - bearerAuth: []
+      summary: UPDATE USER
+      tags:
+        - all
+        - users
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: UUID
+          required: true
+      responses:
+        '200':
+          description: UPDATED
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      security:
+        - bearerAuth: []
+      summary: DELETE USER
+      tags:
+        - all
+        - users
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: UUID
+          required: true
+      responses:
+        '200':
+          description: DELETED
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        '403':
+          description: Forbidden
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: UUID
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [USER, ADMIN]
+        isVerified:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    jsonMessage:
+      type: object
+      properties:
+        message:
+          type: string
