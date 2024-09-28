@@ -48,7 +48,9 @@ exports.createTokens = async (req, res, next) => {
         const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
 
-        // TODO: Save refresh token
+        await db.RefreshToken.create({
+            token: refreshToken
+        });
 
         res.status(201).json({ accessToken, refreshToken });
     } catch (error) {
