@@ -58,16 +58,16 @@ exports.createTokens = async (req, res, next) => {
     }
 };
 
-exports.updateAccessToken = async (req, res, next) => {
-    try {
-    } catch (error) {
-        next(error);
-    }
-};
+// exports.updateAccessToken = async (req, res, next) => {
+//     try {
+//     } catch (error) {
+//         next(error);
+//     }
+// };
 
-exports.deleteRefreshToken = async (req, res, next) => {
-    try {
-    } catch (error) {
-        next(error);
-    }
-};
+// exports.deleteRefreshToken = async (req, res, next) => {
+//     try {
+//     } catch (error) {
+//         next(error);
+//     }
+// };

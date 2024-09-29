@@ -43,6 +43,19 @@ const getUsers = async (accessToken, queryString = "") => {
     return response;
 };
 
+const getUser = async (id, accessToken) => {
+    let response;
+    if (accessToken) {
+        response = await request(app)
+            .get(`${endpoints.users}/${id}`)
+            .set("Authorization", `Bearer ${accessToken}`);
+    } else {
+        response = await request(app).get(`${endpoints.users}/${id}`);
+    }
+
+    return response;
+};
+
 const createTokens = async (email, password) => {
     const response = await request(app).post(endpoints.tokens).send({
         email: email,
@@ -52,4 +65,11 @@ const createTokens = async (email, password) => {
     return response;
 };
 
-module.exports = { endpoints, createAdmin, createUser, getUsers, createTokens };
+module.exports = {
+    endpoints,
+    createAdmin,
+    createUser,
+    getUsers,
+    getUser,
+    createTokens
+};
