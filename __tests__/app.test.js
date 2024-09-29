@@ -8,16 +8,16 @@ const {
     createTokens
 } = require("../api/utils/test-requests");
 
+beforeAll(async () => {
+    await db.User.destroy({ where: {} });
+    await db.RefreshToken.destroy({ where: {} });
+});
+
 afterAll(async () => {
     await db.sequelize.close();
 });
 
 describe("POST /api/users", () => {
-    beforeEach(async () => {
-        await db.User.destroy({ where: {} });
-        await db.RefreshToken.destroy({ where: {} });
-    });
-
     test("Returns the correct response if no name is provided", async () => {
         const response = await createUser("", "user@email.com", "123");
         expect(response.status).toEqual(400);
@@ -43,6 +43,7 @@ describe("POST /api/users", () => {
     });
 
     test("Returns the correct response on success", async () => {
+        await db.User.destroy({ where: {} });
         const response = await createUser("user", "user@email.com", "123");
         expect(response.status).toEqual(201);
         expect(response.header["content-type"]).toEqual(
@@ -51,6 +52,7 @@ describe("POST /api/users", () => {
     });
 
     test("Returns the correct response if email already exists", async () => {
+        await db.User.destroy({ where: {} });
         await createUser("user", "user@email.com", "123");
         const response = await createUser("user", "user@email.com", "123");
         expect(response.status).toEqual(409);
@@ -61,11 +63,6 @@ describe("POST /api/users", () => {
 });
 
 describe("POST /api/tokens", () => {
-    beforeEach(async () => {
-        await db.User.destroy({ where: {} });
-        await db.RefreshToken.destroy({ where: {} });
-    });
-
     test("Returns the correct response if no email is provided", async () => {
         const response = await createTokens("", "123");
         expect(response.status).toEqual(400);
@@ -83,6 +80,7 @@ describe("POST /api/tokens", () => {
     });
 
     test("Returns the correct response if email is incorrect", async () => {
+        await db.User.destroy({ where: {} });
         await createUser("user", "user@email.com", "123");
         const response = await createTokens("incorrect@email.com", "123");
         expect(response.status).toEqual(401);
@@ -92,6 +90,7 @@ describe("POST /api/tokens", () => {
     });
 
     test("Returns the correct response if password is incorrect", async () => {
+        await db.User.destroy({ where: {} });
         await createUser("user", "user@email.com", "123");
         const response = await createTokens("user@email.com", "12");
         expect(response.status).toEqual(401);
@@ -101,6 +100,7 @@ describe("POST /api/tokens", () => {
     });
 
     test("Returns the correct response on success", async () => {
+        await db.User.destroy({ where: {} });
         await createUser("user", "user@email.com", "123");
         const response = await createTokens("user@email.com", "123");
         expect(response.status).toEqual(201);
@@ -113,11 +113,6 @@ describe("POST /api/tokens", () => {
 });
 
 describe("GET /api/users", () => {
-    beforeEach(async () => {
-        await db.User.destroy({ where: {} });
-        await db.RefreshToken.destroy({ where: {} });
-    });
-
     test("Returns the correct response if no access token is provided", async () => {
         const response = await getUsers();
         expect(response.status).toEqual(400);
@@ -135,6 +130,7 @@ describe("GET /api/users", () => {
     });
 
     test("Returns the correct response if user is unauthorized", async () => {
+        await db.User.destroy({ where: {} });
         await createUser("Bob", "bob@email.com", "123");
         const tokens = await createTokens("bob@email.com", "123");
         const accessToken = tokens.body.accessToken;
@@ -207,6 +203,20 @@ describe("Test endpoints that require admin", () => {
         expect(response2.body.length).toEqual(1);
         expect(response2.status).toEqual(200);
         expect(response2.header["content-type"]).toEqual(
+            "application/json; charset=utf-8"
+        );
+    });
+
+    test("GET /api/users returns the correct response using 'order' query", async () => {
+        const bob = await createUser("Bob", "bob@email.com", "123");
+        const adam = await createUser("Adam", "adam@email.com", "123");
+        const carl = await createUser("Carl", "carl@email.com", "123");
+        const response = await getUsers(accessToken, `?order=nameASC`);
+        expect(response.body[0].id).toEqual(adam.body.id);
+        expect(response.body[2].id).toEqual(bob.body.id);
+        expect(response.body[3].id).toEqual(carl.body.id);
+        expect(response.status).toEqual(200);
+        expect(response.header["content-type"]).toEqual(
             "application/json; charset=utf-8"
         );
     });

@@ -7,9 +7,9 @@ function constructQuery(req) {
         where: {}
     };
 
-    // if (req.query.order) {
-    //     query.order = req.query.order;
-    // }
+    if (req.query.order === "nameASC") {
+        query.order = [["name", "ASC"]];
+    }
 
     // if (req.query.limit) {
     //     query.limit = req.query.limit;
