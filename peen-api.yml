@@ -158,7 +158,10 @@ paths:
           name: accessToken
           schema:
             type: string
-          required: true
+        - in: query
+          name: order
+          schema:
+            type: string
         - in: query
           name: limit
           schema:
