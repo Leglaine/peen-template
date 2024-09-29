@@ -11,13 +11,13 @@ function constructQuery(req) {
         query.order = [["name", "ASC"]];
     }
 
-    // if (req.query.limit) {
-    //     query.limit = req.query.limit;
-    // }
+    if (req.query.limit) {
+        query.limit = req.query.limit;
+    }
 
-    // if (req.query.offset) {
-    //     query.offset = req.query.offset;
-    // }
+    if (req.query.offset) {
+        query.offset = req.query.offset;
+    }
 
     if (req.query.before || req.query.after) {
         query.where.createdAt = {};

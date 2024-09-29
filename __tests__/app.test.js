@@ -220,4 +220,25 @@ describe("Test endpoints that require admin", () => {
             "application/json; charset=utf-8"
         );
     });
+
+    test("GET /api/users returns the correct response using 'limit' query", async () => {
+        const response = await getUsers(accessToken, `?limit=2`);
+        expect(response.body.length).toEqual(2);
+        expect(response.status).toEqual(200);
+        expect(response.header["content-type"]).toEqual(
+            "application/json; charset=utf-8"
+        );
+    });
+
+    test("GET /api/users returns the correct response using 'offset' query", async () => {
+        const response = await getUsers(
+            accessToken,
+            `?order=nameASC&limit=2&offset=2`
+        );
+        expect(response.body[0].name).toEqual("Bob");
+        expect(response.status).toEqual(200);
+        expect(response.header["content-type"]).toEqual(
+            "application/json; charset=utf-8"
+        );
+    });
 });
