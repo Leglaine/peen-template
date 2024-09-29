@@ -7,6 +7,7 @@ const usersRouter = require("./api/routers/users.router");
 
 const app = express();
 
+/* istanbul ignore next */
 if (process.env.NODE_ENV === "development") {
     app.use(logger("dev")); // Log HTTP requests
 }
