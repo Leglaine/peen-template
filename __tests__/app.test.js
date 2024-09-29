@@ -46,16 +46,16 @@ async function createTokens(email, password) {
     return response;
 }
 
-beforeEach(async () => {
-    await db.User.destroy({ where: {} });
-    await db.RefreshToken.destroy({ where: {} });
-});
-
 afterAll(async () => {
     await db.sequelize.close();
 });
 
 describe("POST /api/users", () => {
+    beforeEach(async () => {
+        await db.User.destroy({ where: {} });
+        await db.RefreshToken.destroy({ where: {} });
+    });
+
     test("Returns the correct response if no name is provided", async () => {
         const response = await createUser("", "user@email.com", "123");
         expect(response.status).toEqual(400);
@@ -99,6 +99,11 @@ describe("POST /api/users", () => {
 });
 
 describe("POST /api/tokens", () => {
+    beforeEach(async () => {
+        await db.User.destroy({ where: {} });
+        await db.RefreshToken.destroy({ where: {} });
+    });
+
     test("Returns the correct response if no email is provided", async () => {
         const response = await createTokens("", "123");
         expect(response.status).toEqual(400);
@@ -146,6 +151,11 @@ describe("POST /api/tokens", () => {
 });
 
 describe("GET /api/users", () => {
+    beforeEach(async () => {
+        await db.User.destroy({ where: {} });
+        await db.RefreshToken.destroy({ where: {} });
+    });
+
     test("Returns the correct response if no access token is provided", async () => {
         const response = await getUsers();
         expect(response.status).toEqual(400);
@@ -176,14 +186,22 @@ describe("GET /api/users", () => {
             "application/json; charset=utf-8"
         );
     });
+});
 
-    test("Returns the correct response on success", async () => {
+describe("Test endpoints that require admin", () => {
+    let accessToken;
+
+    beforeAll(async () => {
+        await db.User.destroy({ where: {} });
         await createAdmin();
         const tokens = await createTokens(
             "admin@email.com",
             process.env.ADMIN_PASSWORD
         );
-        const accessToken = tokens.body.accessToken;
+        accessToken = tokens.body.accessToken;
+    });
+
+    test("GET /api/users returns the correct response on success", async () => {
         const response = await request(app)
             .get(endpoints.users)
             .set("Authorization", `Bearer ${accessToken}`);
@@ -193,13 +211,7 @@ describe("GET /api/users", () => {
         );
     });
 
-    test("Returns the correct response using 'before' query", async () => {
-        await createAdmin();
-        const tokens = await createTokens(
-            "admin@email.com",
-            process.env.ADMIN_PASSWORD
-        );
-        const accessToken = tokens.body.accessToken;
+    test("GET /api/users Returns the correct response using 'before' query", async () => {
         const response1 = await request(app)
             .get(
                 `${endpoints.users}?before=${new Date(
@@ -226,13 +238,7 @@ describe("GET /api/users", () => {
         );
     });
 
-    test("Returns the correct response using 'after' query", async () => {
-        await createAdmin();
-        const tokens = await createTokens(
-            "admin@email.com",
-            process.env.ADMIN_PASSWORD
-        );
-        const accessToken = tokens.body.accessToken;
+    test("GET /api/users returns the correct response using 'after' query", async () => {
         const response1 = await request(app)
             .get(
                 `${endpoints.users}?after=${new Date(

@@ -7,7 +7,10 @@ const usersRouter = require("./api/routers/users.router");
 
 const app = express();
 
-app.use(logger("dev")); // Log HTTP requests
+if (process.env.NODE_ENV === "development") {
+    app.use(logger("dev")); // Log HTTP requests
+}
+
 app.use(cors()); // Set CORS policy
 app.use(express.json()); // Parse json
 
