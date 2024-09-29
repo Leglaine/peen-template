@@ -2,7 +2,8 @@ const db = require("../db/models");
 const {
     verifyPassword,
     generateAccessToken,
-    generateRefreshToken
+    generateRefreshToken,
+    validateRefreshToken
 } = require("../utils/cryptography");
 
 exports.createTokens = async (req, res, next) => {
@@ -58,12 +59,34 @@ exports.createTokens = async (req, res, next) => {
     }
 };
 
-// exports.updateAccessToken = async (req, res, next) => {
-//     try {
-//     } catch (error) {
-//         next(error);
-//     }
-// };
+exports.updateAccessToken = async (req, res, next) => {
+    if (!req.body.refreshToken) {
+        return res.status(400).json({ message: "Refresh token is required" });
+    }
+    try {
+        const existingToken = await db.RefreshToken.findOne({
+            where: { token: req.body.refreshToken }
+        });
+
+        if (!existingToken) {
+            return res.status(401).json({ message: "Invalid refresh token" });
+        }
+
+        validateRefreshToken(req.body.refreshToken, (err, user) => {
+            if (err) {
+                return res
+                    .status(401)
+                    .json({ message: "Invalid refresh token" });
+            }
+            const accessToken = generateAccessToken(user);
+            res.status(200).json({
+                accessToken: accessToken
+            });
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
 // exports.deleteRefreshToken = async (req, res, next) => {
 //     try {

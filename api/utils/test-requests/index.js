@@ -65,11 +65,20 @@ const createTokens = async (email, password) => {
     return response;
 };
 
+const updateToken = async refreshToken => {
+    const response = await request(app).patch(endpoints.tokens).send({
+        refreshToken: refreshToken
+    });
+
+    return response;
+};
+
 module.exports = {
     endpoints,
     createAdmin,
     createUser,
     getUsers,
     getUser,
-    createTokens
+    createTokens,
+    updateToken
 };
