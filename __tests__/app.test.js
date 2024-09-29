@@ -1,50 +1,12 @@
 require("dotenv").config();
 process.env.NODE_ENV = "test";
-const request = require("supertest");
-const app = require("../app.js");
 const db = require("../api/db/models");
-const { hashPassword } = require("../api/utils/cryptography");
-
-const endpoints = {
-    users: "/api/users",
-    tokens: "/api/tokens"
-};
-
-async function createAdmin() {
-    const hashedPassword = await hashPassword(process.env.ADMIN_PASSWORD);
-    const response = await db.User.create({
-        name: "Admin",
-        email: "admin@email.com",
-        hash: hashedPassword,
-        role: "ADMIN",
-        is_verified: true
-    });
-    return response;
-}
-
-async function createUser(name, email, password) {
-    const response = await request(app).post(endpoints.users).send({
-        name: name,
-        email: email,
-        password: password
-    });
-
-    return response;
-}
-
-async function getUsers() {
-    const response = await request(app).get(endpoints.users);
-    return response;
-}
-
-async function createTokens(email, password) {
-    const response = await request(app).post(endpoints.tokens).send({
-        email: email,
-        password: password
-    });
-
-    return response;
-}
+const {
+    createAdmin,
+    createUser,
+    getUsers,
+    createTokens
+} = require("../api/utils/test-requests");
 
 afterAll(async () => {
     await db.sequelize.close();
@@ -165,9 +127,7 @@ describe("GET /api/users", () => {
     });
 
     test("Returns the correct response if access token is invalid", async () => {
-        const response = await request(app)
-            .get(endpoints.users)
-            .set("Authorization", "Bearer InvalidToken");
+        const response = await getUsers("InvalidToken");
         expect(response.status).toEqual(401);
         expect(response.header["content-type"]).toEqual(
             "application/json; charset=utf-8"
@@ -178,9 +138,7 @@ describe("GET /api/users", () => {
         await createUser("Bob", "bob@email.com", "123");
         const tokens = await createTokens("bob@email.com", "123");
         const accessToken = tokens.body.accessToken;
-        const response = await request(app)
-            .get(endpoints.users)
-            .set("Authorization", `Bearer ${accessToken}`);
+        const response = await getUsers(accessToken);
         expect(response.status).toEqual(403);
         expect(response.header["content-type"]).toEqual(
             "application/json; charset=utf-8"
@@ -202,9 +160,7 @@ describe("Test endpoints that require admin", () => {
     });
 
     test("GET /api/users returns the correct response on success", async () => {
-        const response = await request(app)
-            .get(endpoints.users)
-            .set("Authorization", `Bearer ${accessToken}`);
+        const response = await getUsers(accessToken);
         expect(response.status).toEqual(200);
         expect(response.header["content-type"]).toEqual(
             "application/json; charset=utf-8"
@@ -212,25 +168,20 @@ describe("Test endpoints that require admin", () => {
     });
 
     test("GET /api/users Returns the correct response using 'before' query", async () => {
-        const response1 = await request(app)
-            .get(
-                `${endpoints.users}?before=${new Date(
-                    Date.now() + 86400 * 1000
-                )}`
-            )
-            .set("Authorization", `Bearer ${accessToken}`);
+        const response1 = await getUsers(
+            accessToken,
+            `?before=${new Date(Date.now() + 86400 * 1000)}`
+        );
         expect(response1.body.length).toEqual(1);
         expect(response1.status).toEqual(200);
         expect(response1.header["content-type"]).toEqual(
             "application/json; charset=utf-8"
         );
-        const response2 = await request(app)
-            .get(
-                `${endpoints.users}?before=${new Date(
-                    Date.now() - 86400 * 1000
-                )}`
-            )
-            .set("Authorization", `Bearer ${accessToken}`);
+
+        const response2 = await getUsers(
+            accessToken,
+            `?before=${new Date(Date.now() - 86400 * 1000)}`
+        );
         expect(response2.body.length).toEqual(0);
         expect(response2.status).toEqual(200);
         expect(response2.header["content-type"]).toEqual(
@@ -239,25 +190,20 @@ describe("Test endpoints that require admin", () => {
     });
 
     test("GET /api/users returns the correct response using 'after' query", async () => {
-        const response1 = await request(app)
-            .get(
-                `${endpoints.users}?after=${new Date(
-                    Date.now() + 86400 * 1000
-                )}`
-            )
-            .set("Authorization", `Bearer ${accessToken}`);
+        const response1 = await getUsers(
+            accessToken,
+            `?after=${new Date(Date.now() + 86400 * 1000)}`
+        );
         expect(response1.body.length).toEqual(0);
         expect(response1.status).toEqual(200);
         expect(response1.header["content-type"]).toEqual(
             "application/json; charset=utf-8"
         );
-        const response2 = await request(app)
-            .get(
-                `${endpoints.users}?after=${new Date(
-                    Date.now() - 86400 * 1000
-                )}`
-            )
-            .set("Authorization", `Bearer ${accessToken}`);
+
+        const response2 = await getUsers(
+            accessToken,
+            `?after=${new Date(Date.now() - 86400 * 1000)}`
+        );
         expect(response2.body.length).toEqual(1);
         expect(response2.status).toEqual(200);
         expect(response2.header["content-type"]).toEqual(
