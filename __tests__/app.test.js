@@ -3,11 +3,24 @@ process.env.NODE_ENV = "test";
 const request = require("supertest");
 const app = require("../app.js");
 const db = require("../api/db/models");
+const { hashPassword } = require("../api/utils/cryptography");
 
 const endpoints = {
     users: "/api/users",
     tokens: "/api/tokens"
 };
+
+async function createAdmin() {
+    const hashedPassword = await hashPassword(process.env.ADMIN_PASSWORD);
+    const response = await db.User.create({
+        name: "Admin",
+        email: "admin@email.com",
+        hash: hashedPassword,
+        role: "ADMIN",
+        is_verified: true
+    });
+    return response;
+}
 
 async function createUser(name, email, password) {
     const response = await request(app).post(endpoints.users).send({
@@ -16,6 +29,11 @@ async function createUser(name, email, password) {
         password: password
     });
 
+    return response;
+}
+
+async function getUsers() {
+    const response = await request(app).get(endpoints.users);
     return response;
 }
 
@@ -124,5 +142,25 @@ describe("POST /api/tokens", () => {
         );
         expect(response.body.accessToken).toBeDefined();
         expect(response.body.refreshToken).toBeDefined();
+    });
+});
+
+describe("GET /api/users", () => {
+    test("Returns the correct response if no access token is provided", async () => {
+        const response = await getUsers();
+        expect(response.status).toEqual(400);
+        expect(response.header["content-type"]).toEqual(
+            "application/json; charset=utf-8"
+        );
+    });
+
+    test("Returns the correct response if access token is invalid", async () => {
+        const response = await request(app)
+            .get(endpoints.users)
+            .set("Authorization", "Bearer InvalidToken");
+        expect(response.status).toEqual(401);
+        expect(response.header["content-type"]).toEqual(
+            "application/json; charset=utf-8"
+        );
     });
 });
