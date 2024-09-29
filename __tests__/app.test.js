@@ -163,4 +163,99 @@ describe("GET /api/users", () => {
             "application/json; charset=utf-8"
         );
     });
+
+    test("Returns the correct response if user is unauthorized", async () => {
+        await createUser("Bob", "bob@email.com", "123");
+        const tokens = await createTokens("bob@email.com", "123");
+        const accessToken = tokens.body.accessToken;
+        const response = await request(app)
+            .get(endpoints.users)
+            .set("Authorization", `Bearer ${accessToken}`);
+        expect(response.status).toEqual(403);
+        expect(response.header["content-type"]).toEqual(
+            "application/json; charset=utf-8"
+        );
+    });
+
+    test("Returns the correct response on success", async () => {
+        await createAdmin();
+        const tokens = await createTokens(
+            "admin@email.com",
+            process.env.ADMIN_PASSWORD
+        );
+        const accessToken = tokens.body.accessToken;
+        const response = await request(app)
+            .get(endpoints.users)
+            .set("Authorization", `Bearer ${accessToken}`);
+        expect(response.status).toEqual(200);
+        expect(response.header["content-type"]).toEqual(
+            "application/json; charset=utf-8"
+        );
+    });
+
+    test("Returns the correct response using 'before' query", async () => {
+        await createAdmin();
+        const tokens = await createTokens(
+            "admin@email.com",
+            process.env.ADMIN_PASSWORD
+        );
+        const accessToken = tokens.body.accessToken;
+        const response1 = await request(app)
+            .get(
+                `${endpoints.users}?before=${new Date(
+                    Date.now() + 86400 * 1000
+                )}`
+            )
+            .set("Authorization", `Bearer ${accessToken}`);
+        expect(response1.body.length).toEqual(1);
+        expect(response1.status).toEqual(200);
+        expect(response1.header["content-type"]).toEqual(
+            "application/json; charset=utf-8"
+        );
+        const response2 = await request(app)
+            .get(
+                `${endpoints.users}?before=${new Date(
+                    Date.now() - 86400 * 1000
+                )}`
+            )
+            .set("Authorization", `Bearer ${accessToken}`);
+        expect(response2.body.length).toEqual(0);
+        expect(response2.status).toEqual(200);
+        expect(response2.header["content-type"]).toEqual(
+            "application/json; charset=utf-8"
+        );
+    });
+
+    test("Returns the correct response using 'after' query", async () => {
+        await createAdmin();
+        const tokens = await createTokens(
+            "admin@email.com",
+            process.env.ADMIN_PASSWORD
+        );
+        const accessToken = tokens.body.accessToken;
+        const response1 = await request(app)
+            .get(
+                `${endpoints.users}?after=${new Date(
+                    Date.now() + 86400 * 1000
+                )}`
+            )
+            .set("Authorization", `Bearer ${accessToken}`);
+        expect(response1.body.length).toEqual(0);
+        expect(response1.status).toEqual(200);
+        expect(response1.header["content-type"]).toEqual(
+            "application/json; charset=utf-8"
+        );
+        const response2 = await request(app)
+            .get(
+                `${endpoints.users}?after=${new Date(
+                    Date.now() - 86400 * 1000
+                )}`
+            )
+            .set("Authorization", `Bearer ${accessToken}`);
+        expect(response2.body.length).toEqual(1);
+        expect(response2.status).toEqual(200);
+        expect(response2.header["content-type"]).toEqual(
+            "application/json; charset=utf-8"
+        );
+    });
 });

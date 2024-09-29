@@ -1,8 +1,65 @@
 const db = require("../db/models");
 const { hashPassword } = require("../utils/cryptography");
+const { Op } = require("sequelize");
+
+function constructQuery(req) {
+    let query = {
+        where: {}
+    };
+
+    // if (req.query.order) {
+    //     query.order = req.query.order;
+    // }
+
+    // if (req.query.limit) {
+    //     query.limit = req.query.limit;
+    // }
+
+    // if (req.query.offset) {
+    //     query.offset = req.query.offset;
+    // }
+
+    if (req.query.before || req.query.after) {
+        query.where.createdAt = {};
+    }
+
+    if (req.query.before) {
+        query.where.createdAt[Op.lt] = new Date(req.query.before);
+    }
+
+    if (req.query.after) {
+        query.where.createdAt[Op.gt] = new Date(req.query.after);
+    }
+
+    // if (req.query.name) {
+    //     query.where.name = req.query.name;
+    // }
+
+    // if (req.query.email) {
+    //     query.where.email = req.query.email;
+    // }
+
+    // if (req.query.role) {
+    //     query.where.role = req.query.role;
+    // }
+
+    // if (req.query.verified) {
+    //     query.where.is_verified = req.query.verified;
+    // }
+
+    return query;
+}
 
 exports.getUsers = async (req, res, next) => {
+    if (req.user.role !== "ADMIN") {
+        return res.status(403).json({ message: "Forbidden" });
+    }
+
+    const query = constructQuery(req);
+
     try {
+        const users = await db.User.findAll(query);
+        res.status(200).json(users);
     } catch (error) {
         next(error);
     }
