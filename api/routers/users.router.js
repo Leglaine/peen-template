@@ -6,6 +6,6 @@ router.get("/", authenticateToken, controller.getUsers);
 router.post("/", controller.createUser);
 router.get("/:id", authenticateToken, controller.getUserById);
 router.patch("/:id", authenticateToken, controller.updateUser);
-// router.delete("/:id", authenticateToken, controller.deleteUser);
+router.delete("/:id", authenticateToken, controller.deleteUser);
 
 module.exports = router;

@@ -70,6 +70,19 @@ const updateUser = async (id, accessToken, req) => {
     return response;
 };
 
+const deleteUser = async (id, accessToken) => {
+    let response;
+    if (accessToken) {
+        response = await request(app)
+            .delete(`${endpoints.users}/${id}`)
+            .set("Authorization", `Bearer ${accessToken}`);
+    } else {
+        response = await request(app).delete(`${endpoints.users}/${id}`);
+    }
+
+    return response;
+};
+
 const createTokens = async (email, password) => {
     const response = await request(app).post(endpoints.tokens).send({
         email: email,
@@ -101,6 +114,7 @@ module.exports = {
     getUsers,
     getUser,
     updateUser,
+    deleteUser,
     createTokens,
     updateToken,
     deleteToken

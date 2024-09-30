@@ -134,12 +134,15 @@ exports.updateUser = async (req, res, next) => {
     }
 };
 
-// exports.deleteUser = async (req, res, next) => {
-//     if (req.params.id != req.user?.id && req.user?.role !== "ADMIN") {
-//         return res.status(403).json({ message: "Forbidden" });
-//     }
-//     try {
-//     } catch (error) {
-//         next(error);
-//     }
-// };
+exports.deleteUser = async (req, res, next) => {
+    if (req.params.id != req.user?.id && req.user?.role !== "ADMIN") {
+        return res.status(403).json({ message: "Forbidden" });
+    }
+    try {
+        const user = await db.User.findOne({ where: { id: req.params.id } });
+        await user.destroy();
+        res.status(200).json({ message: "User deleted successfully" });
+    } catch (error) {
+        next(error);
+    }
+};
