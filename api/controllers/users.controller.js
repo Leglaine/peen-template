@@ -117,15 +117,22 @@ exports.getUserById = async (req, res, next) => {
     }
 };
 
-// exports.updateUser = async (req, res, next) => {
-//     if (req.params.id != req.user?.id && req.user?.role !== "ADMIN") {
-//         return res.status(403).json({ message: "Forbidden" });
-//     }
-//     try {
-//     } catch (error) {
-//         next(error);
-//     }
-// };
+exports.updateUser = async (req, res, next) => {
+    // TODO: Allow users to update email and password
+    if (req.params.id != req.user?.id && req.user?.role !== "ADMIN") {
+        return res.status(403).json({ message: "Forbidden" });
+    }
+    try {
+        const user = await db.User.findOne({ where: { id: req.params.id } });
+        if (req.body.name) {
+            user.name = req.body.name;
+        }
+        await user.save();
+        res.status(200).json({ message: "User updated successfully" });
+    } catch (error) {
+        next(error);
+    }
+};
 
 // exports.deleteUser = async (req, res, next) => {
 //     if (req.params.id != req.user?.id && req.user?.role !== "ADMIN") {

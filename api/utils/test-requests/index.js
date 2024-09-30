@@ -56,6 +56,20 @@ const getUser = async (id, accessToken) => {
     return response;
 };
 
+const updateUser = async (id, accessToken, req) => {
+    let response;
+    if (accessToken) {
+        response = await request(app)
+            .patch(`${endpoints.users}/${id}`)
+            .set("Authorization", `Bearer ${accessToken}`)
+            .send(req);
+    } else {
+        response = await request(app).patch(`${endpoints.users}/${id}`);
+    }
+
+    return response;
+};
+
 const createTokens = async (email, password) => {
     const response = await request(app).post(endpoints.tokens).send({
         email: email,
@@ -86,6 +100,7 @@ module.exports = {
     createUser,
     getUsers,
     getUser,
+    updateUser,
     createTokens,
     updateToken,
     deleteToken
