@@ -8,13 +8,19 @@
         "dev": "nodemon -r dotenv/config server.js",
         "test": "jest --run-in-band --silent --coverage --detectOpenHandles"
     },
-    "repository": {},
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Leglaine/peen-template"
+    },
     "keywords": [
+        "template",
         "postgres",
         "express",
         "ejs",
         "node",
-        "sequelize"
+        "sequelize",
+        "jsonwebtoken",
+        "jwt"
     ],
     "author": "Lexi Wright",
     "license": "MIT",
