@@ -8,6 +8,7 @@ module.exports = {
     },
     test: {
         use_env_variable: "TEST_DATABASE_URL",
+        logging: false,
         dialect: "postgres",
         dialectOptions: {
             ssl: {
