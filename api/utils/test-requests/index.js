@@ -73,12 +73,20 @@ const updateToken = async refreshToken => {
     return response;
 };
 
+const deleteToken = async refreshToken => {
+    const response = await request(app).delete(endpoints.tokens).send({
+        refreshToken: refreshToken
+    });
+
+    return response;
+};
+
 module.exports = {
-    endpoints,
     createAdmin,
     createUser,
     getUsers,
     getUser,
     createTokens,
-    updateToken
+    updateToken,
+    deleteToken
 };

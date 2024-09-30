@@ -88,9 +88,25 @@ exports.updateAccessToken = async (req, res, next) => {
     }
 };
 
-// exports.deleteRefreshToken = async (req, res, next) => {
-//     try {
-//     } catch (error) {
-//         next(error);
-//     }
-// };
+exports.deleteRefreshToken = async (req, res, next) => {
+    if (!req.body.refreshToken) {
+        return res.status(400).json({ message: "Refresh token is required" });
+    }
+    try {
+        const existingToken = await db.RefreshToken.findOne({
+            where: { token: req.body.refreshToken }
+        });
+
+        if (!existingToken) {
+            return res.status(401).json({ message: "Invalid refresh token" });
+        }
+
+        await db.RefreshToken.destroy({
+            where: { token: req.body.refreshToken }
+        });
+
+        res.status(200).json({ message: "Refresh token deleted successfully" });
+    } catch (error) {
+        next(error);
+    }
+};
